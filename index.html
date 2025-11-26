@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>โปรแกรมคำนวณภาษี 2568 - TaxPro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PDF Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body class="app-body">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="nav-logo-bg">
+          <i class="fa-solid fa-calculator"></i>
+        </div>
+        <div class="nav-text">
+          <h1>TaxPro 2025</h1>
+          <span>โปรแกรมคำนวณภาษีเงินได้บุคคลธรรมดา</span>
+        </div>
+      </div>
+      <div class="nav-menu">
+        <a href="guide.html" class="nav-item">
+          <i class="fa-solid fa-book-open"></i> คู่มือภาษี
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-container" id="app-content">
+
+    <!-- Left Column: Inputs -->
+    <div class="input-column">
+
+      <!-- Income Section -->
+      <section class="card input-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-money-bill-wave"></i> รายได้ (Income)</h2>
+          <span class="card-subtitle">กรอกรายได้ทั้งปีของคุณ</span>
+        </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label>เงินเดือน (ต่อเดือน)</label>
+            <div class="input-wrapper">
+              <input type="number" id="salary" placeholder="0" oninput="calculateAll()">
+              <span class="unit">บาท</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>โบนัส (ทั้งปี)</label>
+            <div class="input-wrapper">
+              <input type="number" id="bonus" placeholder="0" oninput="calculateAll()">
+              <span class="unit">บาท</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>รายได้อื่นๆ (ทั้งปี) <small class="text-muted">- เช่น ค่าคอมมิชชั่น, รับจ้างอิสระ</small></label>
+          <div class="input-wrapper">
+            <input type="number" id="otherIncome" placeholder="0" oninput="calculateAll()">
+            <span class="unit">บาท</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Deductions Section -->
+      <section class="card input-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-hand-holding-heart"></i> ค่าลดหย่อน (Deductions)</h2>
+          <span class="card-subtitle">เลือกรายการลดหย่อนที่มี</span>
+        </div>
+
+        <!-- Add Deduction Control -->
+        <div class="add-deduction-box">
+          <div class="select-wrapper">
+            <select id="deductionType">
+              <option value="" disabled selected>-- เลือกประเภทค่าลดหย่อน --</option>
+              <optgroup label="กลุ่มพื้นฐาน">
+                <option value="sso">ประกันสังคม (สูงสุด 9,000)</option>
+                <option value="spouse">คู่สมรส (ไม่มีเงินได้) (60,000)</option>
+                <option value="child">บุตร (คนละ 30,000)</option>
+                <option value="parent">บิดามารดา (คนละ 30,000)</option>
+              </optgroup>
+              <optgroup label="กลุ่มประกัน & กองทุน">
+                <option value="life_ins">เบี้ยประกันชีวิต (สูงสุด 100,000)</option>
+                <option value="health_ins">เบี้ยประกันสุขภาพ (สูงสุด 25,000)</option>
+                <option value="pvd">กองทุนสำรองเลี้ยงชีพ (PVD)</option>
+                <option value="ssf">กองทุน SSF (สูงสุด 30% ไม่เกิน 2แสน)</option>
+                <option value="rmf">กองทุน RMF (สูงสุด 30% ไม่เกิน 5แสน)</option>
+                <option value="thaiesg">Thai ESG (สูงสุด 100,000)</option>
+              </optgroup>
+              <optgroup label="กลุ่มกระตุ้นเศรษฐกิจ & บริจาค">
+                <option value="home_interest">ดอกเบี้ยบ้าน (สูงสุด 100,000)</option>
+                <option value="donation_edu">บริจาคเพื่อการศึกษา/กีฬา (2 เท่า)</option>
+                <option value="donation_gen">บริจาคทั่วไป (1 เท่า)</option>
+                <option value="easy_receipt">Easy E-Receipt (สูงสุด 50,000)</option>
+                <option value="other">ค่าลดหย่อนอื่นๆ (ระบุเอง)</option>
+              </optgroup>
+            </select>
+          </div>
+          <button class="btn-add" onclick="addDeduction()">
+            <i class="fa-solid fa-plus"></i> เพิ่มรายการ
+          </button>
+        </div>
+
+        <!-- Dynamic List -->
+        <div id="deductionList" class="deduction-list">
+          <!-- Items will be added here via JS -->
+          <div class="empty-state">
+            ยังไม่มีรายการลดหย่อนเพิ่มเติม (ระบบคำนวณค่าลดหย่อนส่วนตัว 60,000 ให้แล้ว)
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right Column: Summary -->
+    <div class="summary-column">
+      <div class="card summary-card sticky-card">
+        <div class="card-header highlight-header">
+          <h2><i class="fa-solid fa-chart-pie"></i> สรุปภาษี</h2>
+        </div>
+
+        <div class="summary-details">
+          <div class="summary-row">
+            <span>รายได้รวมทั้งปี</span>
+            <span class="val" id="sumTotalIncome">0</span>
+          </div>
+          <div class="summary-row text-red">
+            <span>หัก ค่าใช้จ่าย (50% Max 100k)</span>
+            <span class="val" id="sumExpense">-0</span>
+          </div>
+          <div class="summary-row text-red">
+            <span>หัก ค่าลดหย่อนรวม</span>
+            <span class="val" id="sumDeduction">-60,000</span>
+          </div>
+          <div class="divider"></div>
+          <div class="summary-row highlight-row">
+            <span>เงินได้สุทธิ (Net Income)</span>
+            <span class="val" id="sumNetIncome">0</span>
+          </div>
+        </div>
+
+        <!-- Tax Steps Visualization -->
+        <div class="tax-steps" id="taxSteps">
+          <!-- Steps generated by JS -->
+        </div>
+
+        <div class="total-tax-box">
+          <div class="label">ภาษีที่ต้องชำระ</div>
+          <div class="amount" id="finalTax">0.00</div>
+          <div class="unit">บาท</div>
+        </div>
+
+        <button class="btn-export" onclick="exportPDF()">
+          <i class="fa-solid fa-file-pdf"></i> ดาวน์โหลด PDF
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
